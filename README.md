@@ -82,6 +82,11 @@ project
     ```bash
     docker-compose up -d --build
     ```
+
+    หรือ กรณีไม่มีไฟล์ docker-compose.yml
+    ```bash
+    docker build -t <image name> .
+    ```
 3. Login container registry ของ nipa
     ```bash 
     docker login registry.nipa.cloud
@@ -138,6 +143,34 @@ project
     พิมพ์ `sudo vi /etc/hosts`
     
     เพิ่ม `<external ip>   <hosts ที่ตั้งใน ingress.yaml>`
+
+    ![alt text](image.png)
 ## วิธีเปิดเว็บใช้งาน
 - Host : `hello-world-app.lun.com`
 - localhost : `<external ip>:port ของ ingress หรือ port ของ svc`
+
+## คำสั่งสำหรับเอาไว้เช็ค
+- เช็ค container
+    ```bash
+    docker ps
+    ```
+- เช็ค docker images
+    ```bash
+    docker images
+    ```
+- เช็ค ingress class ใน k8s
+    ```bash
+    k0s kubectl get ingressclass
+    ```
+- เช็ค deployment ใน k8s
+    ```bash
+    k0s kubectl get deployment -A
+    ```
+- เช็ค service ใน k8s
+    ```bash
+    k0s kubectl get svc -A
+    ```
+- เช็ค pods ใน k8s
+    ```bash
+    k0s kubectl get pods
+    ```
