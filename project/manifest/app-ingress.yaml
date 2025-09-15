@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hello-world-app-ingress
+  namespace: default # namespace ที่ติดตั้ง app
+  annotations:
+     kubernetes.io/ingress.class: "nginx" # ชื่อ ingressclass
+spec:
+  rules:
+  - host: hello-world-app.lun.com # ตั้งชื่อเองเเบบไม่ซ้ำใคร
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: hello-world-app-service # ชื่อ service ที่จะให้ชี้ไป
+            port:
+              number: 80

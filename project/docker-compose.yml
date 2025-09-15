@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  web:
+    image: nginx:alpine
+    container_name: hello-world-app
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html
+    ports:
+      - "8080:80" # ใช้ 8081:80 เมื่อต้องเปลี่ยนพอร์ตเพราะมันชนกับ service ใน kube
