@@ -116,6 +116,7 @@ project
 
 ## Deploy docker image to kubernetes
 สร้าง manifest file ชื่อ app-deployment.yaml , app-service.yaml และ app-ingress.yaml สำหรับ Kubernetes
+- `cd project/manifest`
 - ใช้คำสั่ง kubectl apply เพื่อ deploy แอปลง Kubernetes (Pods)
     ```bash
     k0s kubectl apply -f app-deployment.yaml
