@@ -144,7 +144,6 @@ project
     
     เพิ่ม `<external ip>   <hosts ที่ตั้งใน ingress.yaml>`
 
-    ![alt text](image.png)
 ## วิธีเปิดเว็บใช้งาน
 - Host : `hello-world-app.lun.com`
 - localhost : `<external ip>:port ของ ingress หรือ port ของ svc`
