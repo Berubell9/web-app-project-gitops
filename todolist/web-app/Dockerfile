@@ -1,12 +1,12 @@
 # Build Stage
-FROM node:16-alpine AS builder
+FROM node:18-alpine
 WORKDIR /app
 COPY . .
 RUN npm install
 RUN npm run build
 
 # Production Stage
-FROM node:16-alpine
+FROM node:18-alpine
 WORKDIR /app
 COPY --from=builder /app /app
 EXPOSE 3000
