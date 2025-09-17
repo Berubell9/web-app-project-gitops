@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todolist-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: todolist
+  template:
+    metadata:
+      labels:
+        app: todolist
+    spec:
+      containers:
+        - name: web-app
+          image: yourdockerhub/todolist-client:latest # แก้
+          ports:
+            - containerPort: 3000
+        - name: server
+          image: yourdockerhub/todolist-server:latest  # แก้
+          ports:
+            - containerPort: 5000
+        - name: db
+          image: mysql:8.0
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: rootpassword
+            - name: MYSQL_DATABASE
+              value: todos
+          ports:
+            - containerPort: 3306
