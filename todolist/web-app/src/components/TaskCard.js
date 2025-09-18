@@ -1,5 +1,9 @@
-import StatusGroup from "../components/StatusGroup";  // นำเข้า StatusGroup ที่นี่
-import { useState } from "react"; // หรือส่วนอื่น ๆ ที่จำเป็น
+import { useState } from "react";
+// นำเข้าคอมโพเนนต์ที่ขาดหายไป
+import IconButton from "./IconButton";
+import { PencilIcon, TrashIcon, CheckIcon, XIcon } from "./Icons";
+import Badge from "./Badge";
+import StatusGroup from "./StatusGroup"; // นำเข้า StatusGroup ด้วย
 
 function TaskCard({ t, onMove, onDelete, onUpdate }) {
   const [editing, setEditing] = useState(false);
