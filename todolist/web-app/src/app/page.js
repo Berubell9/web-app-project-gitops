@@ -22,7 +22,7 @@ export default function Page() {
       Object.fromEntries(Object.entries(filters).filter(([, v]) => v && v !== "all"))
     ).toString();
 
-    const url = `/api/tasks${qs ? `?${qs}` : ""}`;
+    const url = `http://localhost:5000/api/tasks`; // สำหรับการดึงข้อมูล tasks
     const r = await fetch(url, { cache: "no-store" });
 
     const txt = await r.text();
@@ -45,7 +45,7 @@ export default function Page() {
   const createTask = async (e) => {
     e.preventDefault();
     if (!form.title.trim()) return;
-    await fetch("/api/tasks", {
+    await fetch("http://103.29.190.45:3000/api/tasks", {  // ใช้ URL ของ API
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(form),
@@ -55,7 +55,7 @@ export default function Page() {
   };
 
   const updateTask = async (id, payload) => {
-    await fetch(`/api/tasks/${id}`, {
+    await fetch(`http://103.29.190.45:3000/api/tasks/${id}`, {  // ใช้ URL ของ API
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(payload),
@@ -64,7 +64,7 @@ export default function Page() {
   };
 
   const move = async (id, status) => {
-    await fetch(`/api/tasks/${id}`, {
+    await fetch(`http://103.29.190.45:3000/api/tasks/${id}`, {  // ใช้ URL ของ API
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ status }),
@@ -73,7 +73,9 @@ export default function Page() {
   };
 
   const remove = async (id) => {
-    await fetch(`/api/tasks/${id}`, { method: "DELETE" });
+    await fetch(`http://103.29.190.45:3000/api/tasks/${id}`, {  // ใช้ URL ของ API
+      method: "DELETE",
+    });
     await load();
   };
 

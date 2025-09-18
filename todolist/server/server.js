@@ -1,131 +1,147 @@
 // server.js
+import express from "express";
+import mysql from "mysql2/promise";
+import cors from "cors";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const express = require("express");
-const mysql = require("mysql2");
-const cors = require("cors");
+// ตั้งค่า __dirname
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// โหลด .env ในโฟลเดอร์ api
+dotenv.config({ path: path.join(__dirname, ".env") });
+
 const app = express();
-const port = 5000;
-
 app.use(cors());
 app.use(express.json());
 
-// เชื่อมต่อกับฐานข้อมูล MySQL
-const db = mysql.createConnection({
-  host: "db", // ชื่อ service ของ MySQL ใน docker-compose.yml
-  user: "root",
-  password: "rootpassword",
-  database: "todos",
+// logger ช่วยดีบัก
+app.use((req, _res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`, req.body || "");
+  next();
 });
 
-// เชื่อมต่อฐานข้อมูล
-db.connect((err) => {
-  if (err) throw err;
-  console.log("Connected to database");
-
-  // สร้างฐานข้อมูล todos ถ้ายังไม่มี
-  db.query(`CREATE DATABASE IF NOT EXISTS todos;`, (err, result) => {
-    if (err) throw err;
-    console.log("Database todos is ready");
-
-    // สร้างตาราง todo ถ้ายังไม่มี
-    db.query(
-      `CREATE TABLE IF NOT EXISTS todo (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        description TEXT,
-        assignee VARCHAR(255),
-        due_date DATE,
-        status ENUM('todo', 'in_progress', 'done') DEFAULT 'todo'
-      );`,
-      (err, result) => {
-        if (err) throw err;
-        console.log("Table 'todo' is ready");
-      }
-    );
-  });
+// สร้าง Pool สำหรับการเชื่อมต่อ MySQL
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || "127.0.0.1",  // ใช้ค่า environment หรือค่าเริ่มต้น
+  port: Number(process.env.DB_PORT || 3306),
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD || process.env.DB_PASS,
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
 });
 
-// 1. GET /api/tasks: ดึงข้อมูล Task ทั้งหมด
-app.get("/api/tasks", (req, res) => {
+// health check endpoint
+app.get("/healthz", async (_req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT 1 AS ok");
+    res.json({ ok: rows[0]?.ok === 1 });
+  } catch (e) {
+    console.error("healthz error:", e.code, e.message);
+    res.status(500).json({ ok: false, code: e.code, message: e.message });
+  }
+});
+
+// GET /tasks (ดึงข้อมูลทั้งหมดของ task)
+app.get("/tasks", async (req, res) => {
   const { status, assignee, q } = req.query;
-
-  let query = "SELECT * FROM todo WHERE 1=1";
+  const where = [];
   const params = [];
 
-  if (status && status !== "all") {
-    query += " AND status = ?";
-    params.push(status);
-  }
+  if (status && status !== "all") { where.push("status = ?"); params.push(status); }
+  if (assignee && assignee !== "all") { where.push("assignee = ?"); params.push(assignee); }
+  if (q) { where.push("(title LIKE ? OR description LIKE ?)"); params.push(`%${q}%`, `%${q}%`); }
 
-  if (assignee && assignee !== "all") {
-    query += " AND assignee = ?";
-    params.push(assignee);
+  // SQL query
+  const sql = `
+    SELECT id, title, description, status, assignee,
+           DATE_FORMAT(due_date, '%Y-%m-%d') AS due_date,
+           created_at
+    FROM tasks
+    ${where.length ? "WHERE " + where.join(" AND ") : ""}
+    ORDER BY (due_date IS NULL), due_date ASC, id DESC
+  `;
+  try {
+    const [rows] = await pool.query(sql, params);
+    res.json(rows);
+  } catch (e) {
+    console.error("GET /tasks error:", e.code, e.message);
+    res.status(500).json({ error: "list_failed", code: e.code, message: e.message });
   }
-
-  if (q) {
-    query += " AND title LIKE ?";
-    params.push(`%${q}%`);
-  }
-
-  db.query(query, params, (err, result) => {
-    if (err) return res.status(500).send(err);
-    res.json(result);
-  });
 });
 
-// 2. POST /api/tasks: เพิ่ม Task ใหม่
-app.post("/api/tasks", (req, res) => {
-  const { title, description, assignee, due_date } = req.body;
+// POST /tasks (เพิ่ม Task ใหม่)
+app.post("/tasks", async (req, res) => {
+  try {
+    const { title, description = "", assignee = null, due_date = null } = req.body || {};
+    const t = String(title || "").trim();
+    if (!t) return res.status(400).json({ error: "title_required" });
 
-  if (!title) {
-    return res.status(400).send("Title is required");
+    const cleanAssignee = assignee ? String(assignee).trim() : null;
+    const cleanDate = due_date && /^\d{4}-\d{2}-\d{2}$/.test(due_date) ? due_date : null;
+
+    const [r] = await pool.execute(
+      "INSERT INTO tasks (title, description, assignee, due_date) VALUES (?,?,?,?)",
+      [t, description || null, cleanAssignee, cleanDate]
+    );
+    res.status(201).json({ id: r.insertId });
+  } catch (e) {
+    console.error("POST /tasks error:", e.code, e.message);
+    res.status(500).json({ error: "create_failed", code: e.code, message: e.message });
   }
-
-  const sql = "INSERT INTO todo (title, description, assignee, due_date) VALUES (?, ?, ?, ?)";
-  const values = [title, description, assignee, due_date];
-
-  db.query(sql, values, (err, result) => {
-    if (err) return res.status(500).send(err);
-    res.status(201).json({ id: result.insertId, title, description, assignee, due_date });
-  });
 });
 
-// 3. PUT /api/tasks/:id: แก้ไข Task
-app.put("/api/tasks/:id", (req, res) => {
-  const { id } = req.params;
-  const { title, description, assignee, due_date, status } = req.body;
+// PUT /tasks/:id (แก้ไข Task)
+app.put("/tasks/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  try {
+    const body = req.body || {};
+    if (body.status === "doing") body.status = "in_progress";
 
-  if (!title) {
-    return res.status(400).send("Title is required");
-  }
+    const fields = [];
+    const values = [];
 
-  const sql =
-    "UPDATE todo SET title = ?, description = ?, assignee = ?, due_date = ?, status = ? WHERE id = ?";
-  const values = [title, description, assignee, due_date, status, id];
-
-  db.query(sql, values, (err, result) => {
-    if (err) return res.status(500).send(err);
-    if (result.affectedRows === 0) {
-      return res.status(404).send("Task not found");
+    if (body.title !== undefined) { fields.push("title = ?"); values.push(String(body.title).trim()); }
+    if (body.description !== undefined) { fields.push("description = ?"); values.push(String(body.description).trim() || null); }
+    if (body.assignee !== undefined) { fields.push("assignee = ?"); values.push(String(body.assignee).trim() || null); }
+    if (body.due_date !== undefined) {
+      const cleanDate = body.due_date && /^\d{4}-\d{2}-\d{2}$/.test(body.due_date) ? body.due_date : null;
+      fields.push("due_date = ?"); values.push(cleanDate);
     }
-    res.status(200).json({ id, title, description, assignee, due_date, status });
-  });
-});
-
-// 4. DELETE /api/tasks/:id: ลบ Task
-app.delete("/api/tasks/:id", (req, res) => {
-  const { id } = req.params;
-
-  db.query("DELETE FROM todo WHERE id = ?", [id], (err, result) => {
-    if (err) return res.status(500).send(err);
-    if (result.affectedRows === 0) {
-      return res.status(404).send("Task not found");
+    if (body.status !== undefined) {
+      if (!["todo","in_progress","done"].includes(body.status)) return res.status(400).json({ error: "bad_status" });
+      fields.push("status = ?"); values.push(body.status);
     }
-    res.status(200).send(`Task with id ${id} deleted`);
-  });
+
+    if (!fields.length) return res.status(400).json({ error: "no_fields" });
+
+    values.push(id);
+    const [r] = await pool.execute(`UPDATE tasks SET ${fields.join(", ")} WHERE id = ?`, values);
+    if (!r.affectedRows) return res.status(404).json({ error: "not_found" });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("PUT /tasks/:id error:", e.code, e.message);
+    res.status(500).json({ error: "update_failed", code: e.code, message: e.message });
+  }
 });
 
-// เริ่มต้นเซิร์ฟเวอร์
+// DELETE /tasks/:id (ลบ Task)
+app.delete("/tasks/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  try {
+    const [r] = await pool.execute("DELETE FROM tasks WHERE id = ?", [id]);
+    if (!r.affectedRows) return res.status(404).json({ error: "not_found" });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("DELETE /tasks/:id error:", e.code, e.message);
+    res.status(500).json({ error: "delete_failed", code: e.code, message: e.message });
+  }
+});
+
+// ตั้งค่าให้แอปฟังบน port 5000
+const port = 5000;
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  console.log(`API ready on http://localhost:${port}`);
 });
