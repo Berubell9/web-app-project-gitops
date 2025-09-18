@@ -1,4 +1,3 @@
-// server.js
 import express from "express";
 import mysql from "mysql2/promise";
 import cors from "cors";
@@ -45,7 +44,7 @@ app.get("/healthz", async (_req, res) => {
 });
 
 // GET /tasks (ดึงข้อมูลทั้งหมดของ task)
-app.get("/tasks", async (req, res) => {
+app.get("/api/tasks", async (req, res) => {
   const { status, assignee, q } = req.query;
   const where = [];
   const params = [];
@@ -73,7 +72,7 @@ app.get("/tasks", async (req, res) => {
 });
 
 // POST /tasks (เพิ่ม Task ใหม่)
-app.post("/tasks", async (req, res) => {
+app.post("/api/tasks", async (req, res) => {
   try {
     const { title, description = "", assignee = null, due_date = null } = req.body || {};
     const t = String(title || "").trim();
@@ -94,7 +93,7 @@ app.post("/tasks", async (req, res) => {
 });
 
 // PUT /tasks/:id (แก้ไข Task)
-app.put("/tasks/:id", async (req, res) => {
+app.put("/api/tasks/:id", async (req, res) => {
   const id = Number(req.params.id);
   try {
     const body = req.body || {};
@@ -128,7 +127,7 @@ app.put("/tasks/:id", async (req, res) => {
 });
 
 // DELETE /tasks/:id (ลบ Task)
-app.delete("/tasks/:id", async (req, res) => {
+app.delete("/api/tasks/:id", async (req, res) => {
   const id = Number(req.params.id);
   try {
     const [r] = await pool.execute("DELETE FROM tasks WHERE id = ?", [id]);

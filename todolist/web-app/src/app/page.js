@@ -22,7 +22,8 @@ export default function Page() {
       Object.fromEntries(Object.entries(filters).filter(([, v]) => v && v !== "all"))
     ).toString();
 
-    const url = `http://localhost:5000/api/tasks`; // สำหรับการดึงข้อมูล tasks
+    // เปลี่ยน URL เป็น API ของคุณ
+    const url = `http://103.29.190.45:5000/api/tasks`; // ใช้ API ที่รันบนพอร์ต 5000
     const r = await fetch(url, { cache: "no-store" });
 
     const txt = await r.text();
@@ -45,17 +46,21 @@ export default function Page() {
   const createTask = async (e) => {
     e.preventDefault();
     if (!form.title.trim()) return;
-    await fetch("http://103.29.190.45:3000/api/tasks", {  // ใช้ URL ของ API
+
+    // ใช้ URL ของ API สำหรับการเพิ่ม Task ใหม่
+    await fetch("http://103.29.190.45:5000/api/tasks", {  // ใช้ URL ของ API
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(form),
     });
+
     setForm({ title: "", description: "", assignee: "", due_date: "" });
     await load();
   };
 
   const updateTask = async (id, payload) => {
-    await fetch(`http://103.29.190.45:3000/api/tasks/${id}`, {  // ใช้ URL ของ API
+    // ใช้ URL ของ API สำหรับการอัพเดท Task
+    await fetch(`http://103.29.190.45:5000/api/tasks/${id}`, {  // ใช้ URL ของ API
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(payload),
@@ -64,7 +69,8 @@ export default function Page() {
   };
 
   const move = async (id, status) => {
-    await fetch(`http://103.29.190.45:3000/api/tasks/${id}`, {  // ใช้ URL ของ API
+    // ใช้ URL ของ API สำหรับการเปลี่ยนสถานะของ Task
+    await fetch(`http://103.29.190.45:5000/api/tasks/${id}`, {  // ใช้ URL ของ API
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ status }),
@@ -73,7 +79,8 @@ export default function Page() {
   };
 
   const remove = async (id) => {
-    await fetch(`http://103.29.190.45:3000/api/tasks/${id}`, {  // ใช้ URL ของ API
+    // ใช้ URL ของ API สำหรับการลบ Task
+    await fetch(`http://103.29.190.45:5000/api/tasks/${id}`, {  // ใช้ URL ของ API
       method: "DELETE",
     });
     await load();
