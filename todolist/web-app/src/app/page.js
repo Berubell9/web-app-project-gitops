@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useMemo } from "react";
 import TaskCard from "../components/TaskCard";
 import StatusGroup from "../components/StatusGroup";
