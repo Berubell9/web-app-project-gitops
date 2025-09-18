@@ -1,4 +1,4 @@
-version: '3'
+version: "3.8"
 
 services:
   client:
@@ -8,6 +8,7 @@ services:
       - "3000:3000"
     depends_on:
       - server
+    restart: unless-stopped
 
   server:
     build:
@@ -20,7 +21,9 @@ services:
       - DB_PASSWORD=rootpassword
       - DB_NAME=todos
     depends_on:
-      - db
+      db:
+        condition: service_healthy    # รอจน MySQL healthy
+    restart: unless-stopped
 
   db:
     image: mysql:8.0
@@ -29,3 +32,10 @@ services:
       MYSQL_DATABASE: todos
     ports:
       - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-prootpassword"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
