@@ -1,12 +1,14 @@
-import React, { useState } from "react";
-import IconButton from "./IconButton";
-import { PencilIcon, TrashIcon, CheckIcon, XIcon } from "./Icons";
-import Badge from "./Badge";
+import StatusGroup from "../components/StatusGroup";  // นำเข้า StatusGroup ที่นี่
+import { useState } from "react"; // หรือส่วนอื่น ๆ ที่จำเป็น
 
-export default function TaskCard({ t, onMove, onDelete, onUpdate }) {
+function TaskCard({ t, onMove, onDelete, onUpdate }) {
   const [editing, setEditing] = useState(false);
   const [etitle, setETitle] = useState(t.title);
   const [edesc, setEDesc] = useState(t.description || "");
+
+  const date = t.due_date
+    ? new Date(t.due_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    : null;
 
   const startEdit = () => {
     setETitle(t.title);
@@ -31,7 +33,7 @@ export default function TaskCard({ t, onMove, onDelete, onUpdate }) {
 
   return (
     <div className="relative rounded-2xl border border-slate-700/60 bg-slate-900/40 p-4 backdrop-blur-sm">
-      {/* Icons in top right corner */}
+      {/* icons มุมขวาบน */}
       <div className="absolute right-2 top-2 flex gap-1 opacity-80 hover:opacity-100">
         {editing ? (
           <>
@@ -53,16 +55,16 @@ export default function TaskCard({ t, onMove, onDelete, onUpdate }) {
 
           <div className="mt-2 flex flex-wrap gap-2">
             <Badge className="bg-slate-800/70 border-slate-600 text-slate-100">
-              👤 {t.assignee || "Unassigned"}
+              👤 {t.assignee || "ไม่ระบุ"}
             </Badge>
-            {t.due_date && (
+            {date && (
               <Badge className="bg-slate-800/70 border-slate-600 text-slate-100">
-                📅 {new Date(t.due_date).toLocaleDateString()}
+                📅 {date}
               </Badge>
             )}
           </div>
 
-          {/* Status Buttons */}
+          {/* ปุ่มสถานะ 3 ปุ่ม */}
           <div className="mt-3">
             <StatusGroup value={t.status} onChange={(s) => onMove(t.id, s)} />
           </div>
@@ -90,3 +92,5 @@ export default function TaskCard({ t, onMove, onDelete, onUpdate }) {
     </div>
   );
 }
+
+export default TaskCard;
