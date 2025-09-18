@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { PencilIcon, TrashIcon, CheckIcon, XIcon } from './Icons';
-import IconButton from './IconButton';
-import StatusGroup from './StatusGroup';
+import React, { useState } from "react";
+import IconButton from "./IconButton";
+import { PencilIcon, TrashIcon, CheckIcon, XIcon } from "./Icons";
+import Badge from "./Badge";
 
 export default function TaskCard({ t, onMove, onDelete, onUpdate }) {
   const [editing, setEditing] = useState(false);
@@ -31,6 +31,7 @@ export default function TaskCard({ t, onMove, onDelete, onUpdate }) {
 
   return (
     <div className="relative rounded-2xl border border-slate-700/60 bg-slate-900/40 p-4 backdrop-blur-sm">
+      {/* Icons in top right corner */}
       <div className="absolute right-2 top-2 flex gap-1 opacity-80 hover:opacity-100">
         {editing ? (
           <>
@@ -49,12 +50,19 @@ export default function TaskCard({ t, onMove, onDelete, onUpdate }) {
         <>
           <div className="font-medium">{t.title}</div>
           {t.description && <div className="mt-1 text-sm text-slate-300/80">{t.description}</div>}
+
           <div className="mt-2 flex flex-wrap gap-2">
-            <div className="bg-slate-800/70 border-slate-600 text-slate-100">👤 {t.assignee || "ไม่ระบุ"}</div>
+            <Badge className="bg-slate-800/70 border-slate-600 text-slate-100">
+              👤 {t.assignee || "Unassigned"}
+            </Badge>
             {t.due_date && (
-              <div className="bg-slate-800/70 border-slate-600 text-slate-100">📅 {t.due_date}</div>
+              <Badge className="bg-slate-800/70 border-slate-600 text-slate-100">
+                📅 {new Date(t.due_date).toLocaleDateString()}
+              </Badge>
             )}
           </div>
+
+          {/* Status Buttons */}
           <div className="mt-3">
             <StatusGroup value={t.status} onChange={(s) => onMove(t.id, s)} />
           </div>

@@ -1,4 +1,4 @@
-function StatusButton({ variant, active, onClick, children }) {
+export default function StatusButton({ variant, active, onClick, children }) {
   const base =
     "inline-flex h-9 w-full items-center justify-center rounded-lg border text-xs transition-colors duration-150";
 
@@ -35,5 +35,3 @@ function StatusButton({ variant, active, onClick, children }) {
     </button>
   );
 }
-
-export default StatusButton;

@@ -1,3 +1,5 @@
+// server.js
+
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
@@ -19,10 +21,12 @@ const db = mysql.createConnection({
 db.connect((err) => {
   if (err) throw err;
   console.log("Connected to database");
+
   // สร้างฐานข้อมูล todos ถ้ายังไม่มี
   db.query(`CREATE DATABASE IF NOT EXISTS todos;`, (err, result) => {
     if (err) throw err;
     console.log("Database todos is ready");
+
     // สร้างตาราง todo ถ้ายังไม่มี
     db.query(
       `CREATE TABLE IF NOT EXISTS todo (

@@ -1,6 +1,6 @@
-import StatusButton from './StatusButton'; 
+import StatusButton from "./StatusButton";
 
-function StatusGroup({ value, onChange }) {
+export default function StatusGroup({ value, onChange }) {
   return (
     <div className="grid grid-cols-3 gap-2">
       <StatusButton
@@ -8,24 +8,22 @@ function StatusGroup({ value, onChange }) {
         active={value === "todo"}
         onClick={() => onChange("todo")}
       >
-        {statusLabel.todo}
+        To Do
       </StatusButton>
       <StatusButton
         variant="in_progress"
         active={value === "in_progress"}
         onClick={() => onChange("in_progress")}
       >
-        {statusLabel.in_progress}
+        In Progress
       </StatusButton>
       <StatusButton
         variant="done"
         active={value === "done"}
         onClick={() => onChange("done")}
       >
-        {statusLabel.done}
+        Done
       </StatusButton>
     </div>
   );
 }
-
-export default StatusGroup;
