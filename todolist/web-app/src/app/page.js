@@ -1,10 +1,7 @@
 "use client";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-
-// นำเข้า Components ที่แยกไว้
 import TaskCard from "../components/TaskCard";
-import StatusGroup from "../components/StatusGroup";
 
 // ส่วนของ Label สถานะ
 const statusLabel = {
@@ -20,7 +17,7 @@ export default function Page() {
   const [form, setForm] = useState({ title: "", description: "", assignee: "", due_date: "" });
 
   // ฟังก์ชันดึงข้อมูลจาก API
-  const load = async () => {
+  const load = useCallback(async () => {
     const qs = new URLSearchParams(
       Object.fromEntries(Object.entries(filters).filter(([, v]) => v && v !== "all"))
     ).toString();
@@ -41,9 +38,9 @@ export default function Page() {
       console.error("Invalid JSON from /api/tasks:", txt);
       setItems([]);
     }
-  };
+  }, [filters]); // เพิ่ม filters เป็น dependency
 
-  useEffect(() => { load(); }, [filters]);
+  useEffect(() => { load(); }, [filters, load]); // เพิ่ม load ลงใน dependency array
 
   const createTask = async (e) => {
     e.preventDefault();
