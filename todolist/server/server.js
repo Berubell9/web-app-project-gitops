@@ -19,20 +19,26 @@ const db = mysql.createConnection({
 db.connect((err) => {
   if (err) throw err;
   console.log("Connected to database");
-  // สร้างตาราง todo ถ้ายังไม่มี
-  db.query(
-    `CREATE TABLE IF NOT EXISTS todo (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      title VARCHAR(255) NOT NULL,
-      description TEXT,
-      assignee VARCHAR(255),
-      due_date DATE,
-      status ENUM('todo', 'in_progress', 'done') DEFAULT 'todo'
-    );`,
-    (err, result) => {
-      if (err) throw err;
-    }
-  );
+  // สร้างฐานข้อมูล todos ถ้ายังไม่มี
+  db.query(`CREATE DATABASE IF NOT EXISTS todos;`, (err, result) => {
+    if (err) throw err;
+    console.log("Database todos is ready");
+    // สร้างตาราง todo ถ้ายังไม่มี
+    db.query(
+      `CREATE TABLE IF NOT EXISTS todo (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        assignee VARCHAR(255),
+        due_date DATE,
+        status ENUM('todo', 'in_progress', 'done') DEFAULT 'todo'
+      );`,
+      (err, result) => {
+        if (err) throw err;
+        console.log("Table 'todo' is ready");
+      }
+    );
+  });
 });
 
 // 1. GET /api/tasks: ดึงข้อมูล Task ทั้งหมด
