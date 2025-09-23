@@ -87,3 +87,8 @@ notion : https://www.notion.so/ArgoCD-25643a38c84a8030a733dcd8ae857b42?source=co
     ```base
     k0s kubectl apply -f AppOfApp.yaml
     ```
+
+    4.3 ภายในโฟลเดอร์ manifest ต้องมีไฟล์มั้งหมด 3 ไฟล์ ได้เเก่
+    - app-deployment.yaml
+    - app-ingress.yaml
+    - app-service.yaml
