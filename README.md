@@ -8,6 +8,7 @@ project
 |__ index.html
 |__ Dockerfile
 |__ docker-compose.yml
+|__ AppOfApp.yaml
 |__ manifest
     |__ app-deployment.yaml
     |__ app-service.yaml
@@ -173,3 +174,5 @@ project
     ```bash
     k0s kubectl get pods
     ```
+
+ 
