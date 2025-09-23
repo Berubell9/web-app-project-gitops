@@ -84,7 +84,7 @@ notion : https://www.notion.so/ArgoCD-25643a38c84a8030a733dcd8ae857b42?source=co
                 selfHeal: false
     ```
     4.2 ใช้คำสั่ง kubectl apply เพื่อ deploy แอปลง Kubernetes (Pods)
-    ```base
+    ```basei
     k0s kubectl apply -f AppOfApp.yaml
     ```
 
@@ -92,3 +92,6 @@ notion : https://www.notion.so/ArgoCD-25643a38c84a8030a733dcd8ae857b42?source=co
     - app-deployment.yaml
     - app-ingress.yaml
     - app-service.yaml
+
+# ผลลัพธ์
+![argocd](argocd_images.png)
