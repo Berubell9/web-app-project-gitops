@@ -1,19 +1,27 @@
-FROM python:3.14.0a3-alpine3.21
+# ✅ ใช้ Python stable (เลิกใช้ alpha/alpine)
+FROM python:3.12-slim
 
-# Set the working directory
+# ตั้งค่าพื้นฐานให้ container
+ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+
+# ตั้ง working directory
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
-COPY . . 
+# คัดลอก requirements.txt ก่อน เพื่อใช้ layer cache
+COPY requirements.txt .
 
-# Install any needed packages specified in requirements.txt
-RUN pip install -r requirements.txt
+# ติดตั้ง dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+ && pip install --upgrade pip \
+ && pip install -r requirements.txt \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-#Expose the port
+# คัดลอกโค้ดทั้งหมดเข้า container
+COPY . .
+
+# เปิด port 5000
 EXPOSE 5000
 
-# Run app.py when the container launches
+# ✅ ใช้ host=0.0.0.0 เพื่อให้ Flask เข้าถึงจากภายนอกได้
 CMD ["python", "app.py"]
-
-
-

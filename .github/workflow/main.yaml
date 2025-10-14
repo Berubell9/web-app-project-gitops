@@ -1,0 +1,86 @@
+name: Test and Build
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - '**/*'
+
+permissions:
+  contents: write  # เพื่อให้ git push กลับไปที่ repo ได้
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1) Checkout
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2) Setup Python (สำหรับ lint/test)
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      # 3) Docker Buildx
+      - name: Docker Setup Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 4) Install Python deps + flake8
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8
+
+      # 5) Lint
+      - name: Run Linting tests
+        run: |
+          flake8 --ignore=E501,F401 .
+
+      # 6) สร้าง version tag (timestamp)
+      - name: Set build version
+        run: |
+          VERSION=v$(date +"%Y%m%d%H%M%S")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "IMAGE_REG=registry.nipa.cloud/lun-test/demo-app" >> $GITHUB_ENV
+
+      # 7) Login เข้าสู่ NIPA Registry
+      - name: Login to NIPA registry
+        uses: docker/login-action@v3
+        with:
+          registry: registry.nipa.cloud
+          username: ${{ secrets.NIPA_USERNAME }}
+          password: ${{ secrets.NIPA_PASSWORD }}
+
+      # 8) Build & Push โดยตรงไปที่ NIPA (แนะนำให้ใช้ build-push-action)
+      - name: Build and Push to NIPA
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE_REG }}:${{ env.VERSION }}
+            ${{ env.IMAGE_REG }}:latest
+
+      # 9) อัปเดต K8s manifest ให้ใช้ image ใหม่
+      - name: Update K8s Manifests
+        run: |
+          echo "Before:"
+          cat deploy/deploy.yaml || true
+          # แทนค่า image: ... เป็น image ใหม่จาก NIPA
+          sed -i "s|image: .*|image: ${{ env.IMAGE_REG }}:${{ env.VERSION }}|g" deploy/deploy.yaml
+          echo "After:"
+          cat deploy/deploy.yaml
+
+      # 10) Commit & Push กลับไปที่ repo ปัจจุบัน (ต้องมี permissions: contents: write)
+      - name: Commit the changes
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Actions Bot"
+          git add deploy/deploy.yaml
+          git commit -m "Update deploy.yaml with new image version - ${{ env.VERSION }}" || echo "No changes to commit"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git push origin HEAD:master
