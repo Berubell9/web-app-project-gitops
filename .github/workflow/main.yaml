@@ -2,9 +2,7 @@ name: Test and Build
 
 on:
   push:
-    branches: [ master ]
-    paths:
-      - '**/*'
+    branches: flask-app
 
 permissions:
   contents: write  # เพื่อให้ git push กลับไปที่ repo ได้
