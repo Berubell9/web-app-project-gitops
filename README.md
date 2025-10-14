@@ -1,3 +1,2 @@
-# web-app-project-gitops
-This is a web app for test GitOps concept.
-# in branche beginner
+# for test github action
+https://github.com/infosecsingh/Flask-App-GitHub-Actions-ArgoCD/tree/master
